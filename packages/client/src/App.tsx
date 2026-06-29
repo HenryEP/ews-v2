@@ -18,6 +18,7 @@ import FinancePengajuanList from "./pages/finance/PengajuanList";
 import SiteManagerDashboard from "./pages/site-manager/Dashboard";
 import SiteManagerPengajuan from "./pages/site-manager/Pengajuan";
 import NotificationsPage from "./pages/Notifications";
+import ReportsPage from "./pages/Reports";
 
 function HomeRedirect() {
   const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ export default function App() {
       <Route path="/owner/thresholds" element={<ProtectedRoute roles={["owner"]}><ThresholdConfig /></ProtectedRoute>} />
       <Route path="/owner/notifications/config" element={<ProtectedRoute roles={["owner"]}><NotifConfig /></ProtectedRoute>} />
       <Route path="/owner/notifications/simulate" element={<ProtectedRoute roles={["owner"]}><SimulateNotif /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute roles={["owner","finance"]}><ReportsPage /></ProtectedRoute>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );

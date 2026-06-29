@@ -159,6 +159,9 @@ export default function OwnerDashboard() {
           <button onClick={() => navigate("/owner/notifications/simulate")} className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">
             📱 Simulasi WA/Email
           </button>
+          <button onClick={() => navigate("/reports")} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+            📊 Laporan & Export
+          </button>
         </div>
       </main>
     </div>
