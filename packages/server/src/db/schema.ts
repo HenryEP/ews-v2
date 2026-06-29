@@ -26,3 +26,30 @@ export const projects = sqliteTable("projects", {
   endDate: text("end_date"),
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
+
+export const pengajuan = sqliteTable("pengajuan", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  siteManagerId: integer("site_manager_id").references(() => users.id).notNull(),
+  description: text("description").notNull(),
+  estimatedCost: integer("estimated_cost").notNull(),
+  category: text("category", { enum: ["material", "jasa", "alat", "lainnya"] }).notNull(),
+  notes: text("notes"),
+  status: text("status", { enum: ["menunggu", "disetujui", "ditolak"] }).default("menunggu"),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
+
+export const transaksi = sqliteTable("transaksi", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  pengajuanId: integer("pengajuan_id").references(() => pengajuan.id),
+  type: text("type", { enum: ["po", "invoice", "bon", "tanpa_dokumen"] }).notNull(),
+  amount: integer("amount").notNull(),
+  date: text("date").notNull(),
+  vendor: text("vendor"),
+  category: text("category", { enum: ["material", "jasa", "alat", "lainnya"] }).notNull(),
+  description: text("description").notNull(),
+  approvedByOwner: integer("approved_by_owner").default(0),
+  financeId: integer("finance_id").references(() => users.id),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});

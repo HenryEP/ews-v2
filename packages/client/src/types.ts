@@ -68,3 +68,54 @@ export interface DashboardProject {
   ewsColor: string;
   ewsLabel: string;
 }
+
+export interface Pengajuan {
+  id: number;
+  projectId: number;
+  siteManagerId: number;
+  description: string;
+  estimatedCost: number;
+  category: "material" | "jasa" | "alat" | "lainnya";
+  notes: string | null;
+  status: "menunggu" | "disetujui" | "ditolak";
+  createdAt: string;
+  projectName?: string;
+  siteManagerName?: string;
+}
+
+export interface Transaksi {
+  id: number;
+  projectId: number;
+  pengajuanId: number | null;
+  type: "po" | "invoice" | "bon" | "tanpa_dokumen";
+  amount: number;
+  date: string;
+  vendor: string | null;
+  category: "material" | "jasa" | "alat" | "lainnya";
+  description: string;
+  approvedByOwner: number;
+  financeId: number | null;
+  createdAt: string;
+  projectName?: string;
+  financeName?: string;
+}
+
+export const TRANSACTION_TYPES: Record<string, string> = {
+  po: "PO ke Vendor",
+  invoice: "Invoice",
+  bon: "Bon / Kwitansi",
+  tanpa_dokumen: "Tanpa Dokumen",
+};
+
+export const CATEGORIES: Record<string, string> = {
+  material: "Material",
+  jasa: "Jasa",
+  alat: "Alat",
+  lainnya: "Lainnya",
+};
+
+export const PENGAJUAN_STATUSES: Record<string, string> = {
+  menunggu: "Menunggu",
+  disetujui: "Disetujui",
+  ditolak: "Ditolak",
+};

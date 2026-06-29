@@ -8,7 +8,11 @@ import ProjectNew from "./pages/owner/ProjectNew";
 import ProjectDetail from "./pages/owner/ProjectDetail";
 import FinanceDashboard from "./pages/finance/Dashboard";
 import FinanceProjects from "./pages/finance/Projects";
+import FinanceTransaksi from "./pages/finance/Transaksi";
+import TransaksiList from "./pages/finance/TransaksiList";
+import FinancePengajuanList from "./pages/finance/PengajuanList";
 import SiteManagerDashboard from "./pages/site-manager/Dashboard";
+import SiteManagerPengajuan from "./pages/site-manager/Pengajuan";
 
 function HomeRedirect() {
   const { user, loading } = useAuth();
@@ -42,6 +46,10 @@ export default function App() {
       <Route path="/owner/projects/new" element={<ProtectedRoute roles={["owner"]}><ProjectNew /></ProtectedRoute>} />
       <Route path="/owner/projects/:id" element={<ProtectedRoute roles={["owner"]}><ProjectDetail /></ProtectedRoute>} />
       <Route path="/finance/projects" element={<ProtectedRoute roles={["finance"]}><FinanceProjects /></ProtectedRoute>} />
+      <Route path="/finance/transaksi" element={<ProtectedRoute roles={["finance"]}><TransaksiList /></ProtectedRoute>} />
+      <Route path="/finance/transaksi/new" element={<ProtectedRoute roles={["finance"]}><FinanceTransaksi /></ProtectedRoute>} />
+      <Route path="/finance/pengajuan" element={<ProtectedRoute roles={["finance"]}><FinancePengajuanList /></ProtectedRoute>} />
+      <Route path="/site-manager/pengajuan" element={<ProtectedRoute roles={["site_manager"]}><SiteManagerPengajuan /></ProtectedRoute>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );

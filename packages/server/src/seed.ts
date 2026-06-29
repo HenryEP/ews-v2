@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import { users, projects } from "./db/schema.js";
+import { users, projects, pengajuan, transaksi } from "./db/schema.js";
 import bcrypt from "bcryptjs";
 import * as schema from "./db/schema.js";
 
@@ -41,6 +41,37 @@ async function main() {
       status TEXT DEFAULT 'aktif' CHECK(status IN ('aktif','selesai','ditunda','dibatalkan')),
       start_date TEXT NOT NULL,
       end_date TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS pengajuan (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id),
+      site_manager_id INTEGER NOT NULL REFERENCES users(id),
+      description TEXT NOT NULL,
+      estimated_cost INTEGER NOT NULL,
+      category TEXT NOT NULL CHECK(category IN ('material','jasa','alat','lainnya')),
+      notes TEXT,
+      status TEXT DEFAULT 'menunggu' CHECK(status IN ('menunggu','disetujui','ditolak')),
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS transaksi (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id),
+      pengajuan_id INTEGER REFERENCES pengajuan(id),
+      type TEXT NOT NULL CHECK(type IN ('po','invoice','bon','tanpa_dokumen')),
+      amount INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      vendor TEXT,
+      category TEXT NOT NULL CHECK(category IN ('material','jasa','alat','lainnya')),
+      description TEXT NOT NULL,
+      approved_by_owner INTEGER DEFAULT 0,
+      finance_id INTEGER REFERENCES users(id),
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);

@@ -60,6 +60,8 @@ export default function FinanceDashboard() {
             <button onClick={() => navigate("/finance/projects")} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
               📋 Daftar Proyek
             </button>
+            <button onClick={() => navigate("/finance/transaksi")} className="text-sm text-blue-600 hover:text-blue-800 font-medium">💳 Transaksi</button>
+            <button onClick={() => navigate("/finance/pengajuan")} className="text-sm text-blue-600 hover:text-blue-800 font-medium">📋 Pengajuan</button>
             <span className="text-sm text-gray-600">{user?.name}</span>
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Finance</span>
             <button onClick={logout} className="text-sm text-red-600 hover:text-red-800 cursor-pointer">Keluar</button>
@@ -134,6 +136,15 @@ export default function FinanceDashboard() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => navigate("/finance/transaksi/new")} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+            + Input Transaksi Baru
+          </button>
+          <button onClick={() => navigate("/finance/pengajuan")} className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">
+            Review Pengajuan SM
+          </button>
         </div>
       </main>
     </div>
