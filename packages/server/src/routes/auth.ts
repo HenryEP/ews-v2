@@ -16,7 +16,7 @@ router.post("/login", async (req: Request, res: Response) => {
     return;
   }
 
-  const user = db.select().from(users).where(eq(users.email, email)).get();
+  const user = await db.select().from(users).where(eq(users.email, email)).get();
   if (!user) {
     res.status(401).json({ message: "Email atau password salah" });
     return;
@@ -56,14 +56,14 @@ router.post("/register", authenticate, authorize("owner"), async (req: Request, 
     return;
   }
 
-  const existing = db.select().from(users).where(eq(users.email, email)).get();
+  const existing = await db.select().from(users).where(eq(users.email, email)).get();
   if (existing) {
     res.status(409).json({ message: "Email sudah terdaftar" });
     return;
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = db.insert(users).values({
+  const newUser = await db.insert(users).values({
     email,
     password: hashedPassword,
     name,
@@ -71,13 +71,13 @@ router.post("/register", authenticate, authorize("owner"), async (req: Request, 
     projectId: projectId || null,
   }).returning().get();
 
-  const { password: _, ...userWithoutPassword } = newUser;
+  const { password: _, ...userWithoutPassword } = newUser!;
   res.status(201).json(userWithoutPassword);
 });
 
 // GET /api/auth/me
-router.get("/me", authenticate, (req: Request, res: Response) => {
-  const user = db.select().from(users).where(eq(users.id, req.user!.userId)).get();
+router.get("/me", authenticate, async (req: Request, res: Response) => {
+  const user = await db.select().from(users).where(eq(users.id, req.user!.userId)).get();
   if (!user) {
     res.status(404).json({ message: "User tidak ditemukan" });
     return;

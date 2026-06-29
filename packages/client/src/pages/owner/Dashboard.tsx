@@ -44,9 +44,12 @@ export default function OwnerDashboard() {
 
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h2 className="font-semibold text-lg mb-4">Status Proyek</h2>
-          <p className="text-gray-500 text-sm">
-            Daftar proyek dengan indikator EWS akan ditampilkan di Fase C.
-          </p>
+          <button
+            onClick={() => window.location.href = "/owner/projects"}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+          >
+            Lihat Daftar Proyek →
+          </button>
         </div>
       </main>
     </div>

@@ -3,7 +3,11 @@ import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
+import OwnerProjects from "./pages/owner/Projects";
+import ProjectNew from "./pages/owner/ProjectNew";
+import ProjectDetail from "./pages/owner/ProjectDetail";
 import FinanceDashboard from "./pages/finance/Dashboard";
+import FinanceProjects from "./pages/finance/Projects";
 import SiteManagerDashboard from "./pages/site-manager/Dashboard";
 
 function HomeRedirect() {
@@ -34,6 +38,10 @@ export default function App() {
       <Route path="/owner" element={<ProtectedRoute roles={["owner"]}><OwnerDashboard /></ProtectedRoute>} />
       <Route path="/finance" element={<ProtectedRoute roles={["finance"]}><FinanceDashboard /></ProtectedRoute>} />
       <Route path="/site-manager" element={<ProtectedRoute roles={["site_manager"]}><SiteManagerDashboard /></ProtectedRoute>} />
+      <Route path="/owner/projects" element={<ProtectedRoute roles={["owner"]}><OwnerProjects /></ProtectedRoute>} />
+      <Route path="/owner/projects/new" element={<ProtectedRoute roles={["owner"]}><ProjectNew /></ProtectedRoute>} />
+      <Route path="/owner/projects/:id" element={<ProtectedRoute roles={["owner"]}><ProjectDetail /></ProtectedRoute>} />
+      <Route path="/finance/projects" element={<ProtectedRoute roles={["finance"]}><FinanceProjects /></ProtectedRoute>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );
