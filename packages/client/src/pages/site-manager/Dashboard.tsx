@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { get } from "../../api";
+import NotificationBell from "../../components/NotificationBell";
 import { formatRupiah } from "../../types";
 import type { DashboardProject } from "../../types";
 
@@ -58,6 +59,7 @@ export default function SiteManagerDashboard() {
             <button onClick={() => navigate("/site-manager/pengajuan")} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
               📝 Pengajuan
             </button>
+            <NotificationBell />
             <span className="text-sm text-gray-600">{user?.name}</span>
             <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">Site Manager</span>
             <button onClick={logout} className="text-sm text-red-600 hover:text-red-800 cursor-pointer">Keluar</button>

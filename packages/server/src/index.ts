@@ -6,6 +6,8 @@ import projectRoutes from "./routes/projects.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import pengajuanRoutes from "./routes/pengajuan.js";
 import transaksiRoutes from "./routes/transaksi.js";
+import thresholdRoutes from "./routes/thresholds.js";
+import notificationRoutes from "./routes/notifications.js";
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/pengajuan", pengajuanRoutes);
 app.use("/api/transaksi", transaksiRoutes);
+app.use("/api/thresholds", thresholdRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });

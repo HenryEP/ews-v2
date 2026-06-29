@@ -119,3 +119,35 @@ export const PENGAJUAN_STATUSES: Record<string, string> = {
   disetujui: "Disetujui",
   ditolak: "Ditolak",
 };
+
+export interface Notification {
+  id: number;
+  projectId: number;
+  userId: number;
+  level: string;
+  message: string;
+  isRead: number;
+  createdAt: string;
+  projectName?: string;
+}
+
+export interface ThresholdConfig {
+  projectId?: number;
+  waspada: number;
+  bahaya: number;
+  kritis: number;
+  isDefaults?: boolean;
+}
+
+export interface NotifConfig {
+  level: string;
+  notifyOwner: number;
+  notifyFinance: number;
+  notifySm: number;
+}
+
+export interface SimulationPreview {
+  waMessage: string;
+  emailSubject: string;
+  emailBody: string;
+}

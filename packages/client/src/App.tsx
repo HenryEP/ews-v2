@@ -1,11 +1,15 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NotificationBell from "./components/NotificationBell";
 import Login from "./pages/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
 import OwnerProjects from "./pages/owner/Projects";
 import ProjectNew from "./pages/owner/ProjectNew";
 import ProjectDetail from "./pages/owner/ProjectDetail";
+import ThresholdConfig from "./pages/owner/ThresholdConfig";
+import NotifConfig from "./pages/owner/NotifConfig";
+import SimulateNotif from "./pages/owner/SimulateNotif";
 import FinanceDashboard from "./pages/finance/Dashboard";
 import FinanceProjects from "./pages/finance/Projects";
 import FinanceTransaksi from "./pages/finance/Transaksi";
@@ -13,6 +17,7 @@ import TransaksiList from "./pages/finance/TransaksiList";
 import FinancePengajuanList from "./pages/finance/PengajuanList";
 import SiteManagerDashboard from "./pages/site-manager/Dashboard";
 import SiteManagerPengajuan from "./pages/site-manager/Pengajuan";
+import NotificationsPage from "./pages/Notifications";
 
 function HomeRedirect() {
   const { user, loading } = useAuth();
@@ -50,6 +55,10 @@ export default function App() {
       <Route path="/finance/transaksi/new" element={<ProtectedRoute roles={["finance"]}><FinanceTransaksi /></ProtectedRoute>} />
       <Route path="/finance/pengajuan" element={<ProtectedRoute roles={["finance"]}><FinancePengajuanList /></ProtectedRoute>} />
       <Route path="/site-manager/pengajuan" element={<ProtectedRoute roles={["site_manager"]}><SiteManagerPengajuan /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute roles={["owner","finance","site_manager"]}><NotificationsPage /></ProtectedRoute>} />
+      <Route path="/owner/thresholds" element={<ProtectedRoute roles={["owner"]}><ThresholdConfig /></ProtectedRoute>} />
+      <Route path="/owner/notifications/config" element={<ProtectedRoute roles={["owner"]}><NotifConfig /></ProtectedRoute>} />
+      <Route path="/owner/notifications/simulate" element={<ProtectedRoute roles={["owner"]}><SimulateNotif /></ProtectedRoute>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );

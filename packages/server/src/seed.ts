@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import { users, projects, pengajuan, transaksi } from "./db/schema.js";
+import { users, projects, pengajuan, transaksi, thresholds, notificationConfigs, notifications } from "./db/schema.js";
 import bcrypt from "bcryptjs";
 import * as schema from "./db/schema.js";
 
@@ -75,6 +75,32 @@ async function main() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  await client.execute(`CREATE TABLE IF NOT EXISTS thresholds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    level TEXT NOT NULL CHECK(level IN ('waspada','bahaya','kritis')),
+    percent INTEGER NOT NULL
+  );`);
+
+  await client.execute(`CREATE TABLE IF NOT EXISTS notification_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    level TEXT NOT NULL CHECK(level IN ('waspada','bahaya','kritis','overrun')),
+    notify_owner INTEGER DEFAULT 1,
+    notify_finance INTEGER DEFAULT 1,
+    notify_sm INTEGER DEFAULT 0
+  );`);
+
+  await client.execute(`CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    level TEXT NOT NULL CHECK(level IN ('waspada','bahaya','kritis','overrun')),
+    message TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );`);
 
   const existingUsers = await db.select().from(users).all();
   if (existingUsers.length > 0) {

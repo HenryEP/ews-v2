@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { get } from "../../api";
+import NotificationBell from "../../components/NotificationBell";
 import { formatRupiah } from "../../types";
 import type { DashboardSummary, DashboardProject } from "../../types";
 
@@ -60,6 +61,7 @@ export default function OwnerDashboard() {
             <button onClick={() => navigate("/owner/projects")} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
               📋 Manajemen Proyek
             </button>
+            <NotificationBell />
             <span className="text-sm text-gray-600">{user?.name}</span>
             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">Owner</span>
             <button onClick={logout} className="text-sm text-red-600 hover:text-red-800 cursor-pointer">Keluar</button>
@@ -145,6 +147,18 @@ export default function OwnerDashboard() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => navigate("/owner/thresholds")} className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">
+            ⚙️ Konfigurasi Threshold
+          </button>
+          <button onClick={() => navigate("/owner/notifications/config")} className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">
+            🔔 Penerima Notifikasi
+          </button>
+          <button onClick={() => navigate("/owner/notifications/simulate")} className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium">
+            📱 Simulasi WA/Email
+          </button>
         </div>
       </main>
     </div>

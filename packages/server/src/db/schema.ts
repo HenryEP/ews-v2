@@ -53,3 +53,29 @@ export const transaksi = sqliteTable("transaksi", {
   financeId: integer("finance_id").references(() => users.id),
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
+
+export const thresholds = sqliteTable("thresholds", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  level: text("level", { enum: ["waspada", "bahaya", "kritis"] }).notNull(),
+  percent: integer("percent").notNull(),
+});
+
+export const notificationConfigs = sqliteTable("notification_configs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  level: text("level", { enum: ["waspada", "bahaya", "kritis", "overrun"] }).notNull(),
+  notifyOwner: integer("notify_owner").default(1),
+  notifyFinance: integer("notify_finance").default(1),
+  notifySm: integer("notify_sm").default(0),
+});
+
+export const notifications = sqliteTable("notifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  level: text("level", { enum: ["waspada", "bahaya", "kritis", "overrun"] }).notNull(),
+  message: text("message").notNull(),
+  isRead: integer("is_read").default(0),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
