@@ -117,7 +117,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
         for (const uid of recipients) {
           await db.insert(notifications).values({
             projectId, userId: uid, level: matchedLevel, message: msg,
-          }).run();
+          });
         }
 
         // Add notification info to response

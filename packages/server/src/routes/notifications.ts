@@ -34,7 +34,7 @@ router.get("/unread-count", async (req: Request, res: Response) => {
 
 // PUT /api/notifications/read-all — must be before /:id
 router.put("/read-all", async (req: Request, res: Response) => {
-  await db.update(notifications).set({ isRead: 1 })
+  await db.update(notifications).set({ isRead: true })
     .where(eq(notifications.userId, req.user!.userId));
   res.json({ success: true });
 });
@@ -82,9 +82,9 @@ router.get("/config/:projectId", async (req: Request, res: Response) => {
     const existing = configs.find((c) => c.level === level);
     return {
       level,
-      notifyOwner: existing ? existing.notifyOwner : 1,
-      notifyFinance: existing ? existing.notifyFinance : 1,
-      notifySm: existing ? existing.notifySm : 0,
+      notifyOwner: existing ? existing.notifyOwner : true,
+      notifyFinance: existing ? existing.notifyFinance : true,
+      notifySm: existing ? existing.notifySm : false,
     };
   });
 
@@ -105,15 +105,15 @@ router.put("/config/:projectId", authorize("owner"), async (req: Request, res: R
     const data = {
       projectId,
       level: c.level,
-      notifyOwner: c.notifyOwner ? 1 : 0,
-      notifyFinance: c.notifyFinance ? 1 : 0,
-      notifySm: c.notifySm ? 1 : 0,
+      notifyOwner: !!c.notifyOwner,
+      notifyFinance: !!c.notifyFinance,
+      notifySm: !!c.notifySm,
     };
 
     if (existing) {
       await db.update(notificationConfigs).set(data).where(eq(notificationConfigs.id, existing.id));
     } else {
-      await db.insert(notificationConfigs).values(data).run();
+      await db.insert(notificationConfigs).values(data);
     }
   }
 
@@ -123,7 +123,7 @@ router.put("/config/:projectId", authorize("owner"), async (req: Request, res: R
 // PUT /api/notifications/:id/read — mark as read
 router.put("/:id/read", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.id, id));
+  await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
   res.json({ success: true });
 });
 

@@ -1,81 +1,92 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, serial, text, integer, boolean, pgEnum, timestamp } from "drizzle-orm/pg-core";
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const roleEnum = pgEnum("role", ["owner", "finance", "site_manager"]);
+export const projectTypeEnum = pgEnum("project_type", ["pengadaan", "konstruksi", "jasa", "jasa_perbaikan", "lainnya"]);
+export const budgetTypeEnum = pgEnum("budget_type", ["rab", "percent"]);
+export const projectStatusEnum = pgEnum("project_status", ["aktif", "selesai", "ditunda", "dibatalkan"]);
+export const categoryEnum = pgEnum("category", ["material", "jasa", "alat", "lainnya"]);
+export const pengajuanStatusEnum = pgEnum("pengajuan_status", ["menunggu", "disetujui", "ditolak"]);
+export const transaksiTypeEnum = pgEnum("transaksi_type", ["po", "invoice", "bon", "tanpa_dokumen"]);
+export const thresholdLevelEnum = pgEnum("threshold_level", ["waspada", "bahaya", "kritis"]);
+export const notifConfigLevelEnum = pgEnum("notif_config_level", ["waspada", "bahaya", "kritis", "overrun"]);
+export const notifLevelEnum = pgEnum("notif_level", ["waspada", "bahaya", "kritis", "overrun"]);
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role", { enum: ["owner", "finance", "site_manager"] }).notNull(),
+  role: roleEnum("role").notNull(),
   projectId: integer("project_id"),
-  isActive: integer("is_active").default(1),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const projects = sqliteTable("projects", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type", { enum: ["pengadaan", "konstruksi", "jasa", "jasa_perbaikan", "lainnya"] }).notNull(),
+  type: projectTypeEnum("type").notNull(),
   poValue: integer("po_value").notNull(),
-  budgetType: text("budget_type", { enum: ["rab", "percent"] }).notNull(),
+  budgetType: budgetTypeEnum("budget_type").notNull(),
   budgetPercent: integer("budget_percent"),
   budgetValue: integer("budget_value").notNull(),
   realisasi: integer("realisasi").default(0),
   siteManagerId: integer("site_manager_id").references(() => users.id),
-  status: text("status", { enum: ["aktif", "selesai", "ditunda", "dibatalkan"] }).default("aktif"),
+  status: projectStatusEnum("status").default("aktif"),
   startDate: text("start_date").notNull(),
   endDate: text("end_date"),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const pengajuan = sqliteTable("pengajuan", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const pengajuan = pgTable("pengajuan", {
+  id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   siteManagerId: integer("site_manager_id").references(() => users.id).notNull(),
   description: text("description").notNull(),
   estimatedCost: integer("estimated_cost").notNull(),
-  category: text("category", { enum: ["material", "jasa", "alat", "lainnya"] }).notNull(),
+  category: categoryEnum("category").notNull(),
   notes: text("notes"),
-  status: text("status", { enum: ["menunggu", "disetujui", "ditolak"] }).default("menunggu"),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  status: pengajuanStatusEnum("status").default("menunggu"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const transaksi = sqliteTable("transaksi", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const transaksi = pgTable("transaksi", {
+  id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   pengajuanId: integer("pengajuan_id").references(() => pengajuan.id),
-  type: text("type", { enum: ["po", "invoice", "bon", "tanpa_dokumen"] }).notNull(),
+  type: transaksiTypeEnum("type").notNull(),
   amount: integer("amount").notNull(),
   date: text("date").notNull(),
   vendor: text("vendor"),
-  category: text("category", { enum: ["material", "jasa", "alat", "lainnya"] }).notNull(),
+  category: categoryEnum("category").notNull(),
   description: text("description").notNull(),
-  approvedByOwner: integer("approved_by_owner").default(0),
+  approvedByOwner: boolean("approved_by_owner").default(false),
   financeId: integer("finance_id").references(() => users.id),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const thresholds = sqliteTable("thresholds", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const thresholds = pgTable("thresholds", {
+  id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  level: text("level", { enum: ["waspada", "bahaya", "kritis"] }).notNull(),
+  level: thresholdLevelEnum("level").notNull(),
   percent: integer("percent").notNull(),
 });
 
-export const notificationConfigs = sqliteTable("notification_configs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const notificationConfigs = pgTable("notification_configs", {
+  id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  level: text("level", { enum: ["waspada", "bahaya", "kritis", "overrun"] }).notNull(),
-  notifyOwner: integer("notify_owner").default(1),
-  notifyFinance: integer("notify_finance").default(1),
-  notifySm: integer("notify_sm").default(0),
+  level: notifConfigLevelEnum("level").notNull(),
+  notifyOwner: boolean("notify_owner").default(true),
+  notifyFinance: boolean("notify_finance").default(true),
+  notifySm: boolean("notify_sm").default(false),
 });
 
-export const notifications = sqliteTable("notifications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  level: text("level", { enum: ["waspada", "bahaya", "kritis", "overrun"] }).notNull(),
+  level: notifLevelEnum("level").notNull(),
   message: text("message").notNull(),
-  isRead: integer("is_read").default(0),
-  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });

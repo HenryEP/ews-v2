@@ -65,7 +65,7 @@ router.put("/:projectId", authorize("owner"), async (req: Request, res: Response
       await db.update(thresholds).set({ percent })
         .where(eq(thresholds.id, existing.id));
     } else {
-      await db.insert(thresholds).values({ projectId, level, percent }).run();
+      await db.insert(thresholds).values({ projectId, level, percent });
     }
   }
 
