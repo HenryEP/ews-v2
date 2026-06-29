@@ -9,6 +9,11 @@ async function main() {
   const client = createClient({ url: "file:ews.db" });
   const db = drizzle(client, { schema });
 
+  // Add realisasi column if not exists (for existing databases)
+  try {
+    await client.execute("ALTER TABLE projects ADD COLUMN realisasi INTEGER DEFAULT 0");
+  } catch (_) { /* column already exists */ }
+
   await client.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +36,7 @@ async function main() {
       budget_type TEXT NOT NULL CHECK(budget_type IN ('rab','percent')),
       budget_percent INTEGER,
       budget_value INTEGER NOT NULL,
+      realisasi INTEGER DEFAULT 0,
       site_manager_id INTEGER REFERENCES users(id),
       status TEXT DEFAULT 'aktif' CHECK(status IN ('aktif','selesai','ditunda','dibatalkan')),
       start_date TEXT NOT NULL,
@@ -64,21 +70,21 @@ async function main() {
   const existingProjects = await db.select().from(projects).all();
   if (existingProjects.length === 0) {
     const projectData = [
-      { name: "Pengadaan Spare Part Turbin A", type: "pengadaan" as const, poValue: 500000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 325000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-01-15", endDate: "2025-08-30" },
-      { name: "Pembangunan Gedung Kantor B", type: "konstruksi" as const, poValue: 2000000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 1850000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-02-01", endDate: "2025-12-31" },
-      { name: "Perbaikan Mesin Press C", type: "jasa_perbaikan" as const, poValue: 150000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 105000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-03-10", endDate: "2025-07-15" },
-      { name: "Renovasi Gudang D", type: "konstruksi" as const, poValue: 800000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 750000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-01-20", endDate: "2025-09-30" },
-      { name: "Pengadaan Panel Listrik E", type: "pengadaan" as const, poValue: 300000000, budgetType: "percent" as const, budgetPercent: 68, budgetValue: 204000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-04-01", endDate: "2025-10-31" },
-      { name: "Pemasangan CCTV Pabrik F", type: "pengadaan" as const, poValue: 120000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 78000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-04-15", endDate: "2025-08-30" },
-      { name: "Pembangunan Pos Satpam G", type: "konstruksi" as const, poValue: 200000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 190000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-05-01", endDate: "2025-09-30" },
-      { name: "Jasa Kalibrasi Alat Ukur H", type: "jasa" as const, poValue: 80000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 56000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-05-15", endDate: "2025-07-30" },
-      { name: "Pengadaan Genset Cadangan I", type: "pengadaan" as const, poValue: 450000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 292500000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-02-15", endDate: "2025-11-30" },
-      { name: "Renovasi Toilet Kantor J", type: "konstruksi" as const, poValue: 150000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 140000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-06-01", endDate: "2025-08-30" },
-      { name: "Jasa Cleaning Service K", type: "jasa" as const, poValue: 60000000, budgetType: "percent" as const, budgetPercent: 80, budgetValue: 48000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-01-01", endDate: "2025-12-31" },
-      { name: "Pengadaan UPS Server L", type: "pengadaan" as const, poValue: 200000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 130000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-03-01", endDate: "2025-09-30" },
-      { name: "Perbaikan Atap Gudang M", type: "konstruksi" as const, poValue: 350000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 320000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-06-15", endDate: "2025-11-30" },
-      { name: "Jasa Pest Control N", type: "jasa" as const, poValue: 40000000, budgetType: "percent" as const, budgetPercent: 75, budgetValue: 30000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-04-01", endDate: "2025-10-31" },
-      { name: "Pengadaan Peralatan K3 O", type: "pengadaan" as const, poValue: 100000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 70000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-05-01", endDate: "2025-08-30" },
+      { name: "Pengadaan Spare Part Turbin A", type: "pengadaan" as const, poValue: 500000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 325000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-01-15", endDate: "2025-08-30", realisasi: 295750000 },
+      { name: "Pembangunan Gedung Kantor B", type: "konstruksi" as const, poValue: 2000000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 1850000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-02-01", endDate: "2025-12-31", realisasi: 1332000000 },
+      { name: "Perbaikan Mesin Press C", type: "jasa_perbaikan" as const, poValue: 150000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 105000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-03-10", endDate: "2025-07-15", realisasi: 57750000 },
+      { name: "Renovasi Gudang D", type: "konstruksi" as const, poValue: 800000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 750000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-01-20", endDate: "2025-09-30", realisasi: 772500000 },
+      { name: "Pengadaan Panel Listrik E", type: "pengadaan" as const, poValue: 300000000, budgetType: "percent" as const, budgetPercent: 68, budgetValue: 204000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-04-01", endDate: "2025-10-31", realisasi: 81600000 },
+      { name: "Pemasangan CCTV Pabrik F", type: "pengadaan" as const, poValue: 120000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 78000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-04-15", endDate: "2025-08-30", realisasi: 68640000 },
+      { name: "Pembangunan Pos Satpam G", type: "konstruksi" as const, poValue: 200000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 190000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-05-01", endDate: "2025-09-30", realisasi: 114000000 },
+      { name: "Jasa Kalibrasi Alat Ukur H", type: "jasa" as const, poValue: 80000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 56000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-05-15", endDate: "2025-07-30", realisasi: 53200000 },
+      { name: "Pengadaan Genset Cadangan I", type: "pengadaan" as const, poValue: 450000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 292500000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-02-15", endDate: "2025-11-30", realisasi: 228150000 },
+      { name: "Renovasi Toilet Kantor J", type: "konstruksi" as const, poValue: 150000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 140000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-06-01", endDate: "2025-08-30", realisasi: 70000000 },
+      { name: "Jasa Cleaning Service K", type: "jasa" as const, poValue: 60000000, budgetType: "percent" as const, budgetPercent: 80, budgetValue: 48000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-01-01", endDate: "2025-12-31", realisasi: 50400000 },
+      { name: "Pengadaan UPS Server L", type: "pengadaan" as const, poValue: 200000000, budgetType: "percent" as const, budgetPercent: 65, budgetValue: 130000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-03-01", endDate: "2025-09-30", realisasi: 106600000 },
+      { name: "Perbaikan Atap Gudang M", type: "konstruksi" as const, poValue: 350000000, budgetType: "rab" as const, budgetPercent: null, budgetValue: 320000000, siteManagerId: 3, status: "aktif" as const, startDate: "2025-06-15", endDate: "2025-11-30", realisasi: 144000000 },
+      { name: "Jasa Pest Control N", type: "jasa" as const, poValue: 40000000, budgetType: "percent" as const, budgetPercent: 75, budgetValue: 30000000, siteManagerId: 4, status: "aktif" as const, startDate: "2025-04-01", endDate: "2025-10-31", realisasi: 21000000 },
+      { name: "Pengadaan Peralatan K3 O", type: "pengadaan" as const, poValue: 100000000, budgetType: "percent" as const, budgetPercent: 70, budgetValue: 70000000, siteManagerId: 5, status: "aktif" as const, startDate: "2025-05-01", endDate: "2025-08-30", realisasi: 45500000 },
     ];
 
     for (const p of projectData) {

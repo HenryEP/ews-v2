@@ -40,3 +40,31 @@ export function formatRupiah(value: number): string {
   if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(0)} Jt`;
   return `Rp ${value.toLocaleString("id-ID")}`;
 }
+
+export interface DashboardSummary {
+  totalProyekAktif: number;
+  totalNilaiPO: number;
+  totalRealisasi: number;
+  totalBudget: number;
+  sisaAnggaran: number;
+}
+
+export interface DashboardProject {
+  id: number;
+  name: string;
+  type: string;
+  poValue: number;
+  budgetType: string;
+  budgetPercent: number | null;
+  budgetValue: number;
+  realisasi: number;
+  siteManagerId: number | null;
+  siteManagerName: string | null;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  percent: number;
+  ewsStatus: string;
+  ewsColor: string;
+  ewsLabel: string;
+}
