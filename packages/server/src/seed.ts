@@ -12,7 +12,7 @@ async function main() {
   const db = drizzle(pool, { schema });
 
   // Check if already seeded
-  const existingUsers = await db.select().from(users).all();
+  const existingUsers = await db.select().from(users);
   if (existingUsers.length > 0) {
     console.log("Database already seeded, skipping...");
     await pool.end();
