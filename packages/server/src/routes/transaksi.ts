@@ -22,19 +22,19 @@ router.get("/", async (req: Request, res: Response) => {
   let query = db.select().from(transaksi);
 
   if (req.user?.role === "site_manager") {
-    const user = await db.select().from(users).where(eq(users.id, req.user.userId)).get();
+    const [user] = await db.select().from(users).where(eq(users.id, req.user.userId)).limit(1);
     if (user?.projectId) query = query.where(eq(transaksi.projectId, user.projectId));
     else { res.json([]); return; }
   }
 
   if (projectId) query = query.where(eq(transaksi.projectId, parseInt(projectId as string)));
 
-  const list = await query.all();
+  const list = await query;
 
   const enriched = [];
   for (const t of list) {
-    const project = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, t.projectId)).get();
-    const finance = t.financeId ? await db.select({ name: users.name }).from(users).where(eq(users.id, t.financeId)).get() : null;
+    const [project] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, t.projectId)).limit(1);
+    const [finance] = t.financeId ? await db.select({ name: users.name }).from(users).where(eq(users.id, t.financeId)).limit(1) : [null];
     enriched.push({ ...t, projectName: project?.name, financeName: finance?.name });
   }
 
@@ -49,7 +49,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
     res.status(400).json({ message: "Proyek, tipe, jumlah, tanggal, kategori, dan deskripsi wajib diisi" }); return;
   }
 
-  const result = await db.insert(transaksi).values({
+  const [result] = await db.insert(transaksi).values({
     projectId,
     pengajuanId: pengajuanId || null,
     type,
@@ -59,20 +59,20 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
     category,
     description,
     financeId: req.user!.userId,
-  }).returning().get();
+  }).returning();
 
   // Auto-update project realisasi
-  const sumResult = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
+  const [sumResult] = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
     .from(transaksi)
     .where(eq(transaksi.projectId, projectId))
-    .get();
+    .limit(1);
 
   await db.update(projects)
     .set({ realisasi: sumResult?.total || 0 })
     .where(eq(projects.id, projectId));
 
   // EWS trigger — check thresholds and create notifications
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (project && project.budgetValue > 0) {
     const percent = Math.round((project.realisasi / project.budgetValue) * 100);
     const newLevel = getEwsLevel(percent);
@@ -80,7 +80,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
     if (newLevel) {
       // Get custom thresholds
       const thresholdRows = await db.select().from(thresholds)
-        .where(eq(thresholds.projectId, projectId)).all();
+        .where(eq(thresholds.projectId, projectId));
 
       let thresholdPct: Record<string, number> = { waspada: 70, bahaya: 85, kritis: 95 };
       for (const t of thresholdRows) thresholdPct[t.level] = t.percent;
@@ -94,20 +94,20 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
 
       if (matchedLevel) {
         // Get notification config
-        const config = await db.select().from(notificationConfigs)
+        const [config] = await db.select().from(notificationConfigs)
           .where(eq(notificationConfigs.projectId, projectId))
-          .get();
+          .limit(1);
 
         const labels: Record<string, string> = { waspada: "Waspada", bahaya: "Bahaya", kritis: "Kritis", overrun: "Overrun" };
         const msg = `Proyek "${project.name}" mencapai level ${labels[matchedLevel]} (${percent}%)`;
 
         const recipients: number[] = [];
         if (!config || config.notifyOwner) {
-          const owner = await db.select().from(users).where(eq(users.role, "owner")).get();
+          const [owner] = await db.select().from(users).where(eq(users.role, "owner")).limit(1);
           if (owner) recipients.push(owner.id);
         }
         if (config?.notifyFinance) {
-          const finance = await db.select().from(users).where(eq(users.role, "finance")).get();
+          const [finance] = await db.select().from(users).where(eq(users.role, "finance")).limit(1);
           if (finance) recipients.push(finance.id);
         }
         if (config?.notifySm && project.siteManagerId) {
@@ -132,7 +132,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
 // GET /api/transaksi/:id
 router.get("/:id", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  const t = await db.select().from(transaksi).where(eq(transaksi.id, id)).get();
+  const [t] = await db.select().from(transaksi).where(eq(transaksi.id, id)).limit(1);
   if (!t) { res.status(404).json({ message: "Transaksi tidak ditemukan" }); return; }
   res.json(t);
 });

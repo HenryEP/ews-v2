@@ -13,7 +13,7 @@ const DEFAULTS = { waspada: 70, bahaya: 85, kritis: 95 };
 // GET /api/thresholds/:projectId — get thresholds for a project
 router.get("/:projectId", async (req: Request, res: Response) => {
   const projectId = parseInt(req.params.projectId);
-  const rows = await db.select().from(thresholds).where(eq(thresholds.projectId, projectId)).all();
+  const rows = await db.select().from(thresholds).where(eq(thresholds.projectId, projectId));
 
   if (rows.length === 0) {
     res.json({
@@ -57,9 +57,9 @@ router.put("/:projectId", authorize("owner"), async (req: Request, res: Response
 
   for (const { level, percent } of levels) {
     if (percent === undefined) continue;
-    const existing = await db.select().from(thresholds)
+    const [existing] = await db.select().from(thresholds)
       .where(eq(thresholds.projectId, projectId))
-      .get();
+      .limit(1);
 
     if (existing) {
       await db.update(thresholds).set({ percent })
@@ -69,7 +69,7 @@ router.put("/:projectId", authorize("owner"), async (req: Request, res: Response
     }
   }
 
-  const updated = await db.select().from(thresholds).where(eq(thresholds.projectId, projectId)).all();
+  const updated = await db.select().from(thresholds).where(eq(thresholds.projectId, projectId));
   const result: any = { projectId, isDefaults: false };
   for (const r of updated) result[r.level] = r.percent;
   if (!result.waspada) result.waspada = DEFAULTS.waspada;

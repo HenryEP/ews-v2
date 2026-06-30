@@ -76,13 +76,13 @@ function pdfTable(doc: PDFKit.PDFDocument, headers: string[], rows: string[][], 
 
 // GET /api/reports/projects-list — list projects for dropdown
 router.get("/projects-list", async (_req: Request, res: Response) => {
-  const list = await db.select({ id: projects.id, name: projects.name }).from(projects).all();
+  const list = await db.select({ id: projects.id, name: projects.name }).from(projects);
   res.json(list);
 });
 
 // GET /api/reports/summary/pdf — ringkasan semua proyek PDF
 router.get("/summary/pdf", async (req: Request, res: Response) => {
-  const allProjects = await db.select().from(projects).all();
+  const allProjects = await db.select().from(projects);
 
   const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
   res.setHeader("Content-Type", "application/pdf");
@@ -121,7 +121,7 @@ router.get("/summary/pdf", async (req: Request, res: Response) => {
 
 // GET /api/reports/summary/excel — ringkasan semua proyek Excel
 router.get("/summary/excel", async (req: Request, res: Response) => {
-  const allProjects = await db.select().from(projects).all();
+  const allProjects = await db.select().from(projects);
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Ringkasan Proyek");
@@ -160,18 +160,18 @@ router.get("/summary/excel", async (req: Request, res: Response) => {
 // GET /api/reports/project/:id/pdf — detail proyek PDF
 router.get("/project/:id/pdf", async (req: Request, res: Response) => {
   const projectId = parseInt(req.params.id);
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project) { res.status(404).json({ message: "Proyek tidak ditemukan" }); return; }
 
-  const sm = project.siteManagerId
-    ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.siteManagerId)).get()
-    : null;
+  const [sm] = project.siteManagerId
+    ? await db.select({ name: users.name }).from(users).where(eq(users.id, project.siteManagerId)).limit(1)
+    : [null];
 
   const { startDate, endDate } = req.query;
   let query = db.select().from(transaksi).where(eq(transaksi.projectId, projectId));
   if (startDate) query = query.where(gte(transaksi.date, startDate as string));
   if (endDate) query = query.where(lte(transaksi.date, endDate as string));
-  const txList = await query.all();
+  const txList = await query;
 
   const percent = project.budgetValue > 0 ? Math.round((project.realisasi / project.budgetValue) * 100) : 0;
 
@@ -237,14 +237,14 @@ router.get("/project/:id/pdf", async (req: Request, res: Response) => {
 // GET /api/reports/project/:id/excel — detail proyek Excel
 router.get("/project/:id/excel", async (req: Request, res: Response) => {
   const projectId = parseInt(req.params.id);
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project) { res.status(404).json({ message: "Proyek tidak ditemukan" }); return; }
 
   const { startDate, endDate } = req.query;
   let query = db.select().from(transaksi).where(eq(transaksi.projectId, projectId));
   if (startDate) query = query.where(gte(transaksi.date, startDate as string));
   if (endDate) query = query.where(lte(transaksi.date, endDate as string));
-  const txList = await query.all();
+  const txList = await query;
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Detail Proyek");

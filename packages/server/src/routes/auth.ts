@@ -16,7 +16,7 @@ router.post("/login", async (req: Request, res: Response) => {
     return;
   }
 
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (!user) {
     res.status(401).json({ message: "Email atau password salah" });
     return;
@@ -56,20 +56,20 @@ router.post("/register", authenticate, authorize("owner"), async (req: Request, 
     return;
   }
 
-  const existing = await db.select().from(users).where(eq(users.email, email)).get();
+  const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (existing) {
     res.status(409).json({ message: "Email sudah terdaftar" });
     return;
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = await db.insert(users).values({
+  const [newUser] = await db.insert(users).values({
     email,
     password: hashedPassword,
     name,
     role,
     projectId: projectId || null,
-  }).returning().get();
+  }).returning();
 
   const { password: _, ...userWithoutPassword } = newUser!;
   res.status(201).json(userWithoutPassword);
@@ -77,7 +77,7 @@ router.post("/register", authenticate, authorize("owner"), async (req: Request, 
 
 // GET /api/auth/me
 router.get("/me", authenticate, async (req: Request, res: Response) => {
-  const user = await db.select().from(users).where(eq(users.id, req.user!.userId)).get();
+  const [user] = await db.select().from(users).where(eq(users.id, req.user!.userId)).limit(1);
   if (!user) {
     res.status(404).json({ message: "User tidak ditemukan" });
     return;

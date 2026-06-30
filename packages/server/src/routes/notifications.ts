@@ -10,12 +10,11 @@ router.use(authenticate);
 // GET /api/notifications — list notifications for current user
 router.get("/", async (req: Request, res: Response) => {
   const list = await db.select().from(notifications)
-    .where(eq(notifications.userId, req.user!.userId))
-    .all();
+    .where(eq(notifications.userId, req.user!.userId));
 
   const enriched = [];
   for (const n of list) {
-    const project = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, n.projectId)).get();
+    const [project] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, n.projectId)).limit(1);
     enriched.push({ ...n, projectName: project?.name || "Unknown" });
   }
 
@@ -26,8 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /api/notifications/unread-count — must be before /:id
 router.get("/unread-count", async (req: Request, res: Response) => {
   const list = await db.select().from(notifications)
-    .where(eq(notifications.userId, req.user!.userId))
-    .all();
+    .where(eq(notifications.userId, req.user!.userId));
   const count = list.filter((n) => !n.isRead).length;
   res.json({ count });
 });
@@ -46,7 +44,7 @@ router.post("/simulate", async (req: Request, res: Response) => {
     res.status(400).json({ message: "projectId, level, percent wajib" }); return;
   }
 
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
   if (!project) { res.status(404).json({ message: "Proyek tidak ditemukan" }); return; }
 
   const labels: Record<string, string> = {
@@ -75,7 +73,7 @@ router.post("/simulate", async (req: Request, res: Response) => {
 router.get("/config/:projectId", async (req: Request, res: Response) => {
   const projectId = parseInt(req.params.projectId);
   const configs = await db.select().from(notificationConfigs)
-    .where(eq(notificationConfigs.projectId, projectId)).all();
+    .where(eq(notificationConfigs.projectId, projectId));
 
   const levels = ["waspada", "bahaya", "kritis", "overrun"];
   const result = levels.map((level) => {
@@ -98,9 +96,9 @@ router.put("/config/:projectId", authorize("owner"), async (req: Request, res: R
   if (!Array.isArray(configs)) { res.status(400).json({ message: "configs harus array" }); return; }
 
   for (const c of configs) {
-    const existing = await db.select().from(notificationConfigs)
+    const [existing] = await db.select().from(notificationConfigs)
       .where(eq(notificationConfigs.projectId, projectId))
-      .get();
+      .limit(1);
 
     const data = {
       projectId,

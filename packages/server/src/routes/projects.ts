@@ -13,8 +13,7 @@ router.use(authenticate);
 router.get("/site-managers/list", async (_req: Request, res: Response) => {
   const sms = await db.select({ id: users.id, name: users.name, email: users.email })
     .from(users)
-    .where(eq(users.role, "site_manager"))
-    .all();
+    .where(eq(users.role, "site_manager"));
   res.json(sms);
 });
 
@@ -26,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
   let query = db.select().from(projects);
 
   if (req.user!.role === "site_manager") {
-    const user = await db.select().from(users).where(eq(users.id, req.user!.userId)).get();
+    const [user] = await db.select().from(users).where(eq(users.id, req.user!.userId)).limit(1);
     if (user?.projectId) {
       query = query.where(eq(projects.id, user.projectId));
     } else {
@@ -38,15 +37,16 @@ router.get("/", async (req: Request, res: Response) => {
   if (status) query = query.where(eq(projects.status, status as string));
   if (type) query = query.where(eq(projects.type, type as string));
 
-  const result = await query.all();
+  const result = await query;
 
   // Include site manager name by joining
-  const enriched = result.map((p) => {
-    const sm = p.siteManagerId
-      ? db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).get()
-      : null;
-    return { ...p, siteManagerName: sm?.name || null };
-  });
+  const enriched = [];
+  for (const p of result) {
+    const [sm] = p.siteManagerId
+      ? await db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).limit(1)
+      : [null];
+    enriched.push({ ...p, siteManagerName: sm?.name || null });
+  }
 
   // Filter by search after query (SQLite doesn't have ILIKE)
   const filtered = search
@@ -59,15 +59,15 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /api/projects/:id — detail with site manager info
 router.get("/:id", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+  const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!project) {
     res.status(404).json({ message: "Proyek tidak ditemukan" });
     return;
   }
 
-  const sm = project.siteManagerId
-    ? await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, project.siteManagerId)).get()
-    : null;
+  const [sm] = project.siteManagerId
+    ? await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, project.siteManagerId)).limit(1)
+    : [null];
 
   res.json({ ...project, siteManager: sm });
 });
@@ -80,7 +80,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
     return;
   }
 
-  const newProject = await db.insert(projects).values({
+  const [newProject] = await db.insert(projects).values({
     name,
     type,
     poValue,
@@ -90,7 +90,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
     siteManagerId: siteManagerId || null,
     startDate,
     endDate: endDate || null,
-  }).returning().get();
+  }).returning();
 
   res.status(201).json(newProject);
 });
@@ -98,7 +98,7 @@ router.post("/", authorize("owner", "finance"), async (req: Request, res: Respon
 // PUT /api/projects/:id — update project (owner & finance only)
 router.put("/:id", authorize("owner", "finance"), async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  const existing = await db.select().from(projects).where(eq(projects.id, id)).get();
+  const [existing] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!existing) {
     res.status(404).json({ message: "Proyek tidak ditemukan" });
     return;
@@ -117,7 +117,7 @@ router.put("/:id", authorize("owner", "finance"), async (req: Request, res: Resp
   if (startDate !== undefined) updateData.startDate = startDate;
   if (endDate !== undefined) updateData.endDate = endDate;
 
-  const updated = await db.update(projects).set(updateData).where(eq(projects.id, id)).returning().get();
+  const [updated] = await db.update(projects).set(updateData).where(eq(projects.id, id)).returning();
   res.json(updated);
 });
 

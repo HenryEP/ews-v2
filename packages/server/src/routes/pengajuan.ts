@@ -12,18 +12,18 @@ router.get("/", async (req: Request, res: Response) => {
   let query = db.select().from(pengajuan);
 
   if (req.user?.role === "site_manager") {
-    const user = await db.select().from(users).where(eq(users.id, req.user.userId)).get();
+    const [user] = await db.select().from(users).where(eq(users.id, req.user.userId)).limit(1);
     if (user?.projectId) {
       query = query.where(eq(pengajuan.projectId, user.projectId));
     } else { res.json([]); return; }
   }
 
-  const list = await query.all();
+  const list = await query;
 
   const enriched = [];
   for (const p of list) {
-    const project = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, p.projectId)).get();
-    const sm = await db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).get();
+    const [project] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, p.projectId)).limit(1);
+    const [sm] = await db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).limit(1);
     enriched.push({ ...p, projectName: project?.name, siteManagerName: sm?.name });
   }
 
@@ -40,9 +40,9 @@ router.post("/", authorize("owner", "finance", "site_manager"), async (req: Requ
   const smId = req.user?.role === "site_manager" ? req.user.userId : req.body.siteManagerId;
   if (!smId) { res.status(400).json({ message: "Site Manager harus ditentukan" }); return; }
 
-  const result = await db.insert(pengajuan).values({
+  const [result] = await db.insert(pengajuan).values({
     projectId, siteManagerId: smId, description, estimatedCost, category, notes: notes || null,
-  }).returning().get();
+  }).returning();
 
   res.status(201).json(result);
 });
@@ -55,10 +55,10 @@ router.put("/:id", authorize("owner", "finance"), async (req: Request, res: Resp
     res.status(400).json({ message: "Status tidak valid" }); return;
   }
 
-  const existing = await db.select().from(pengajuan).where(eq(pengajuan.id, id)).get();
+  const [existing] = await db.select().from(pengajuan).where(eq(pengajuan.id, id)).limit(1);
   if (!existing) { res.status(404).json({ message: "Pengajuan tidak ditemukan" }); return; }
 
-  const updated = await db.update(pengajuan).set({ status }).where(eq(pengajuan.id, id)).returning().get();
+  const [updated] = await db.update(pengajuan).set({ status }).where(eq(pengajuan.id, id)).returning();
   res.json(updated);
 });
 

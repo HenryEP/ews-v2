@@ -19,7 +19,7 @@ function getEwsStatus(percent: number): { level: string; color: string; label: s
 
 // GET /api/dashboard/summary — executive summary cards
 router.get("/summary", async (req: Request, res: Response) => {
-  const allProjects = await db.select().from(projects).all();
+  const allProjects = await db.select().from(projects);
   const activeProjects = allProjects.filter((p) => p.status === "aktif");
 
   const totalPO = activeProjects.reduce((sum, p) => sum + p.poValue, 0);
@@ -38,14 +38,14 @@ router.get("/summary", async (req: Request, res: Response) => {
 
 // GET /api/dashboard/projects — project list with EWS status
 router.get("/projects", async (req: Request, res: Response) => {
-  const allProjects = await db.select().from(projects).all();
+  const allProjects = await db.select().from(projects);
 
   const enriched = [];
   for (const p of allProjects) {
     const percent = p.budgetValue > 0 ? Math.round((p.realisasi / p.budgetValue) * 100) : 0;
     const ews = getEwsStatus(percent);
     const sm = p.siteManagerId
-      ? await db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).get()
+      ? (await db.select({ name: users.name }).from(users).where(eq(users.id, p.siteManagerId)).limit(1))[0]
       : null;
     enriched.push({
       ...p,
@@ -59,7 +59,7 @@ router.get("/projects", async (req: Request, res: Response) => {
 
   // If site_manager, filter to only their project
   if (req.user?.role === "site_manager") {
-    const user = await db.select().from(users).where(eq(users.id, req.user.userId)).get();
+    const [user] = await db.select().from(users).where(eq(users.id, req.user.userId)).limit(1);
     if (user?.projectId) {
       const filtered = enriched.filter((p) => p.id === user.projectId);
       res.json(filtered);
