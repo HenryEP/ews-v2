@@ -5,3 +5,4 @@ dist/
 *.db-journal
 test-*.ts
 drizzle/
+build-log-*.txt
